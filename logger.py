@@ -1,8 +1,9 @@
 import datetime
 from pathlib import Path
+from typing import Callable
 
 
-def singleton(cls):
+def singleton(cls: Callable):
     instances = {}
 
     def getinstance(*args, **kwargs):
@@ -18,7 +19,7 @@ def singleton(cls):
     return getinstance
 
 
-def catch_exception(func):
+def catch_exception(func: Callable):
     def action(*args, **kwargs):
         try:
             ret = func(*args, **kwargs)
@@ -40,6 +41,7 @@ class Logger:
     def __init__(self, path=""):
         self.base_path = Path.home() if not path else Path(path)
         self.file = None
+        self.last_event = ""
 
     @catch_exception
     def __del__(self):
@@ -47,7 +49,7 @@ class Logger:
             self.file.close()
 
     def __repr__(self):
-        return f"{type(self)} {id(self)} path: {self.base_path}"
+        return f"{type(self)} {id(self)} base path: {self.base_path}"
 
     @staticmethod
     def current_date() -> str:
@@ -59,7 +61,7 @@ class Logger:
 
     @catch_exception
     def __open_file_log(self, mode: str):
-        fname = f"{self.base_path}{'' if self.base_path.name.endswith('/') else '/'}log_{self.current_date()}.log"
+        fname = f"{self.base_path}{'' if self.base_path.name.endswith('/') else '/'}log_{self.current_date()}"
         if Path(fname).exists():
             self.file = open(fname, mode, encoding='utf-8')
         else:
@@ -68,8 +70,9 @@ class Logger:
 
     @catch_exception
     def write_log(self, msg: str):
+        self.last_event = f"[{self.current_time()}] {msg}"
         self.__open_file_log("a+")
-        self.file.write(f"[{self.current_time()}] {msg}\n")
+        self.file.write(f"{self.last_event}\n")
         self.file.close()
 
     @catch_exception
@@ -85,13 +88,12 @@ class Logger:
         return lst
 
     @catch_exception
-    def get_last_events(self):
-        lst = self.get_logs()
-        return lst[-1] if len(lst) > 0 else ""
+    def get_last_event(self):
+        return self.last_event
 
     @catch_exception
     def get_all_logs(self):
-        return [line.name for line in self.base_path.glob("log_*.*.*.log")]
+        return [line.name for line in self.base_path.glob("log_??.??.????")]
 
 
 if __name__ == '__main__':
@@ -100,7 +102,7 @@ if __name__ == '__main__':
     print(l1, l2)
 
     l1.write_log("test test")
-    print(l1.get_last_events())
+    print(l1.get_last_event())
     print(l1.get_logs())
     print(l2.get_all_logs())
     # l2.clear_log()
