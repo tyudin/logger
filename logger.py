@@ -35,8 +35,6 @@ def catch_exception(func: Callable):
 
 @singleton
 class Logger:
-    class LoggerException(Exception):
-        pass
 
     def __init__(self, path=""):
         self.base_path = Path.home() if not path else Path(path)
@@ -88,11 +86,11 @@ class Logger:
         return lst
 
     @catch_exception
-    def get_last_event(self):
+    def get_last_event(self) -> str:
         return self.last_event
 
     @catch_exception
-    def get_all_logs(self):
+    def get_all_logs(self) -> list:
         return [line.name for line in self.base_path.glob("log_??.??.????")]
 
 
